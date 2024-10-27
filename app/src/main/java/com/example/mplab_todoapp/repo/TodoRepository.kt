@@ -1,6 +1,6 @@
-package com.example.mplab_todoapp.model.repository
+package com.example.mplab_todoapp.repo
 
-import com.example.mplab_todoapp.model.data.TodoItem
+import com.example.mplab_todoapp.model.TodoItem
 
 class TodoRepository {
     private val todoList = mutableListOf<TodoItem>()
@@ -12,7 +12,7 @@ class TodoRepository {
     }
 
     fun updateTodoItem(updatedItem: TodoItem) {
-        val index = todoList.indexOfFirst { it.id == updatedItem.id }
+        val index = todoList.indexOfFirst { it.title == updatedItem.title }
         if (index != -1) todoList[index] = updatedItem
     }
 }

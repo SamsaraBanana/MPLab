@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -22,8 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.mplab_todoapp.model.data.TodoItem
-import com.example.mplab_todoapp.model.repository.TodoRepository
+import com.example.mplab_todoapp.model.TodoItem
+import com.example.mplab_todoapp.repo.TodoRepository
 import com.example.mplab_todoapp.ui.components.TodoItemCard
 import com.example.mplab_todoapp.ui.theme.MPLab_ToDoAppTheme
 import com.example.mplab_todoapp.viewmodel.TodoViewModel
@@ -50,10 +53,9 @@ fun TodoListScreen(viewModel: TodoViewModel , modifier: Modifier = Modifier) {
                 }
             }
             if (showTextField) {
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    label = { Text("Write ToDo") }
+                AddTodoDialog(
+                    viewModel = viewModel,
+                    onDismiss = { showTextField = false}
                 )
             }
 
@@ -69,6 +71,51 @@ fun TodoListScreen(viewModel: TodoViewModel , modifier: Modifier = Modifier) {
     }
 }
 
+
+@Composable
+fun AddTodoDialog(
+    viewModel: TodoViewModel,
+    onDismiss: () -> Unit
+) {
+    var todoText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Add new To-Do")
+        },
+        text = {
+            Column {
+                TextField(
+                    value = todoText,
+                    onValueChange = { todoText = it },
+                    label = { Text("Enter To-Do") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (todoText.isNotBlank()) {
+                        viewModel.addTodoItem(todoText)
+                        onDismiss()
+                    }
+                }
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+
+
 @Preview(showBackground = true)
 @Composable
 fun TodoListScreenPreview() {
@@ -80,8 +127,8 @@ fun TodoListScreenPreview() {
 @Composable
 fun previewTodoViewModel(): TodoViewModel {
     val dummyRepository = TodoRepository().apply {
-        addTodoItem(TodoItem(id = 1, title = "Sample Task 1", isCompleted = false))
-        addTodoItem(TodoItem(id = 2, title = "Sample Task 2", isCompleted = true))
+        addTodoItem(TodoItem(title = "Sample Task 1", isCompleted = false))
+        addTodoItem(TodoItem(title = "Sample Task 2", isCompleted = true))
     }
     return TodoViewModel(dummyRepository)
 }

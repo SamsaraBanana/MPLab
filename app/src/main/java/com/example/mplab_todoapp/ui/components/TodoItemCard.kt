@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.mplab_todoapp.model.data.TodoItem
+import com.example.mplab_todoapp.model.TodoItem
 import com.example.mplab_todoapp.ui.theme.MPLab_ToDoAppTheme
 
 
@@ -35,7 +35,7 @@ fun TodoItemCard(item: TodoItem, onItemClick: (TodoItem) -> Unit) {
 @Composable
 fun TodoItemCardPreview() {
     MPLab_ToDoAppTheme {
-        val todoItem = TodoItem(1,"123", false)
+        val todoItem = TodoItem("123", false)
         TodoItemCard(todoItem, onItemClick = { })
     }
 }

@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.example.mplab_todoapp.model.repository.TodoRepository
+import com.example.mplab_todoapp.repo.TodoRepository
 import com.example.mplab_todoapp.ui.screens.TodoListScreen
 import com.example.mplab_todoapp.ui.theme.MPLab_ToDoAppTheme
 import com.example.mplab_todoapp.viewmodel.TodoViewModel

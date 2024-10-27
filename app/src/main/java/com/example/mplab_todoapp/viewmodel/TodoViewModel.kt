@@ -3,8 +3,8 @@ package com.example.mplab_todoapp.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.mplab_todoapp.model.data.TodoItem
-import com.example.mplab_todoapp.model.repository.TodoRepository
+import com.example.mplab_todoapp.model.TodoItem
+import com.example.mplab_todoapp.repo.TodoRepository
 
 class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
     private val _todoList = MutableLiveData<List<TodoItem>>()
@@ -14,14 +14,18 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
         _todoList.value = repository.getTodoList()
     }
 
-    fun addTodoItem(item: TodoItem) {
-        repository.addTodoItem(item)
+    fun addTodoItem(title: String) {
+
+        repository.addTodoItem(TodoItem(title = title,isCompleted = false))
         _todoList.value = repository.getTodoList()
     }
 
     fun toggleCompletion(item: TodoItem) {
-        val updatedItem = item.copy(isCompleted = !item.isCompleted)
-        repository.updateTodoItem(updatedItem)
-        _todoList.value = repository.getTodoList()
+        val currentList = _todoList.value ?: return
+        val updatedList = currentList.map {
+            if (it.title == item.title) it.copy(isCompleted = !it.isCompleted) else it
+        }
+        // Setze die aktualisierte Liste neu, um die UI zu benachrichtigen
+        _todoList.value = updatedList
     }
 }

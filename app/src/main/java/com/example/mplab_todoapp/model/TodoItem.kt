@@ -1,4 +1,4 @@
-package com.example.mplab_todoapp.model.data
+package com.example.mplab_todoapp.model
 
 /**
  * Eine data class wird speziell für einfache Datencontainer verwendet
@@ -11,7 +11,6 @@ package com.example.mplab_todoapp.model.data
  * ....
  */
 data class TodoItem (
-    val id: Int,
     val title: String,
     val isCompleted: Boolean
 )
