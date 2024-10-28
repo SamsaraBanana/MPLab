@@ -11,11 +11,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -25,18 +25,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.mplab_todoapp.model.TodoItem
-import com.example.mplab_todoapp.repo.TodoRepository
 import com.example.mplab_todoapp.ui.components.TodoItemCard
 import com.example.mplab_todoapp.ui.theme.MPLab_ToDoAppTheme
 import com.example.mplab_todoapp.viewmodel.TodoViewModel
 
 @Composable
 fun TodoListScreen(viewModel: TodoViewModel , modifier: Modifier = Modifier) {
+    // States
     val todoList by viewModel.todoList.observeAsState(emptyList())
-    // Zustand für die Sichtbarkeit des Textfelds verwalten
     var showTextField by remember { mutableStateOf(false) }
-    var inputText by remember { mutableStateOf("") }
+    var todoText = remember { mutableStateOf<String>("") }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -49,12 +47,13 @@ fun TodoListScreen(viewModel: TodoViewModel , modifier: Modifier = Modifier) {
             )
             LazyColumn(modifier = Modifier.weight(1f)) {
                 items(todoList) { item ->
-                    TodoItemCard(item = item, onItemClick = { viewModel.toggleCompletion(item) })
+                    TodoItemCard(item = item, onItemClick = { viewModel.toggleCompletion(item) }, onDeleteClick ={viewModel.deleteTodoItem(item)})
                 }
             }
             if (showTextField) {
                 AddTodoDialog(
                     viewModel = viewModel,
+                    todoText = todoText,
                     onDismiss = { showTextField = false}
                 )
             }
@@ -75,10 +74,9 @@ fun TodoListScreen(viewModel: TodoViewModel , modifier: Modifier = Modifier) {
 @Composable
 fun AddTodoDialog(
     viewModel: TodoViewModel,
+    todoText: MutableState<String>,
     onDismiss: () -> Unit
 ) {
-    var todoText by remember { mutableStateOf("") }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -87,8 +85,8 @@ fun AddTodoDialog(
         text = {
             Column {
                 TextField(
-                    value = todoText,
-                    onValueChange = { todoText = it },
+                    value = todoText.value,
+                    onValueChange = { todoText.value = it },
                     label = { Text("Enter To-Do") },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -97,8 +95,8 @@ fun AddTodoDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (todoText.isNotBlank()) {
-                        viewModel.addTodoItem(todoText)
+                    if (todoText.value.isNotBlank()) {
+                        viewModel.addTodoItem(todoText.value)
                         onDismiss()
                     }
                 }
@@ -108,6 +106,7 @@ fun AddTodoDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
+                todoText.value=""
                 Text("Cancel")
             }
         }
@@ -121,14 +120,11 @@ fun AddTodoDialog(
 fun TodoListScreenPreview() {
     MPLab_ToDoAppTheme {
         TodoListScreen(viewModel = previewTodoViewModel())
+
     }
 }
 
 @Composable
 fun previewTodoViewModel(): TodoViewModel {
-    val dummyRepository = TodoRepository().apply {
-        addTodoItem(TodoItem(title = "Sample Task 1", isCompleted = false))
-        addTodoItem(TodoItem(title = "Sample Task 2", isCompleted = true))
-    }
-    return TodoViewModel(dummyRepository)
+    return TodoViewModel()
 }
