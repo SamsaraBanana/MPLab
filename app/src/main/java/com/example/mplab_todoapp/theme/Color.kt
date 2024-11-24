@@ -1,4 +1,4 @@
-package com.example.mplab_todoapp.ui.theme
+package com.example.mplab_todoapp.theme
 
 import androidx.compose.ui.graphics.Color
 
