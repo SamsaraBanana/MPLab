@@ -33,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -40,6 +41,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.compose.foundation.lazy.items
 
 
 
@@ -51,7 +56,7 @@ class MainActivity : ComponentActivity() {
             MPLab_ToDoAppTheme {
                 Scaffold (
                     content = { paddingValues ->
-                        TodoListScreen(modifier = Modifier.padding(paddingValues))
+                        TodoListScreen(modifier = Modifier.padding(paddingValues), viewModel = TodoViewModel())
                     }
                 )
             }
@@ -63,11 +68,13 @@ class MainActivity : ComponentActivity() {
 //MutableStateOf -> Überwacht Compose und benachrichtigt Compose bei änderungen und sorgt für UI rebuilds.
 
 @Composable
-fun TodoListScreen(modifier: Modifier = Modifier) {
+fun TodoListScreen(modifier: Modifier = Modifier, viewModel: TodoViewModel) {
     // Speicher und greift direkt auf den Wert des Objekts zu. Ist keine direkte Instanz! Sondern nur eine referenz/weiterleitung.
     var showTextField by remember { mutableStateOf(false) }
     // Speichert das gesamten mutableState Objekt. Wird gebraucht um das Objekt an Funktionen weiter zu geben.
     var todoText = remember { mutableStateOf("") }
+
+    val todoList by viewModel.todoList.observeAsState(emptyList())
 
     // Debugging
     val context = LocalContext.current
@@ -80,12 +87,21 @@ fun TodoListScreen(modifier: Modifier = Modifier) {
                     .padding(16.dp)
                     .fillMaxWidth()
             )
+            //Common error: Wrong Idiot import
+            // import androidx.compose.foundation.lazy.items
             LazyColumn(modifier = Modifier.weight(1f)) {
-
+                items(todoList) { item ->
+                    TodoItemCard(
+                        item = item,
+                        onItemClick = { viewModel.toggleCompletion(item) },
+                        onDeleteClick = { viewModel.deleteTodoItem(item) }
+                    )
+                }
             }
             if (showTextField) {
                 AddTodoDialog(
                     todoText = todoText,
+                    viewModel = viewModel,
                     onDismiss =
                     {
                         showTextField = false
@@ -113,6 +129,7 @@ fun TodoListScreen(modifier: Modifier = Modifier) {
 @Composable
 fun AddTodoDialog(
     todoText: MutableState<String>,
+    viewModel: TodoViewModel,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -134,6 +151,7 @@ fun AddTodoDialog(
             Button(
                 onClick = {
                     if (todoText.value.isNotBlank()) {
+                        viewModel.addTodoItem(todoText.value)
                         onDismiss()
                     }
                     todoText.value =""
@@ -156,7 +174,7 @@ fun AddTodoDialog(
 @Composable
 fun TodoListScreenPreview() {
     MPLab_ToDoAppTheme {
-        TodoListScreen()
+        TodoListScreen(viewModel = TodoViewModel())
 
     }
 }
@@ -215,3 +233,34 @@ data class TodoItem (
     val title: String,
     val isCompleted: Boolean
 )
+
+class TodoViewModel() : ViewModel() {
+    private val _todoList = MutableLiveData<List<TodoItem>>()
+    val todoList: LiveData<List<TodoItem>> get() = _todoList
+
+    fun addTodoItem(title: String) {
+        val currentList = _todoList.value ?: emptyList()
+        val updatedList = currentList + TodoItem(title = title, isCompleted = false)
+
+        _todoList.value = updatedList
+    }
+
+    fun deleteTodoItem(item: TodoItem) {
+        val currentList = _todoList.value ?: return
+        val updatedList = currentList.toMutableList().apply {
+            remove(item)
+        }
+
+        _todoList.value = updatedList
+    }
+
+    fun toggleCompletion(item: TodoItem) {
+        val currentList = _todoList.value ?: return // Is todoList Null ?: No? Do left operation. Yes? Do right operation
+        val updatedList = currentList.map {
+            if (it.title == item.title) it.copy(isCompleted = !it.isCompleted) else it
+        }
+        // Set value to refresh UI.
+        _todoList.value = updatedList
+    }
+
+}
